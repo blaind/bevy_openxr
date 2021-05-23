@@ -1,8 +1,8 @@
-[package]
-name = "bevy_openxr"
-version = "0.0.1"
-edition = "2018"
-description = "(Unofficial) OpenXR integration WIP for Bevy engine"
-license = "MIT"
+[workspace]
+members = ["crates/*"]
 
-[dependencies]
+[patch.crates-io]
+bevy = { path = "../bevy" }
+openxr = { path = "../openxrs/openxr" }
+openxr-sys = { path = "../openxrs/sys" }
+wgpu = { path = "../wgpu-rs" }
