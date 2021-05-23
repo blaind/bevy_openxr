@@ -1,7 +1,7 @@
 use bevy::math::{Quat, Vec3};
 use bevy::transform::components::Transform;
 use bevy::utils::tracing::warn;
-use openxr::{HandJointLocations, Time, View};
+use openxr::{Time, View};
 use std::{fmt::Debug, num::NonZeroU32, sync::Arc};
 use wgpu::OpenXRHandles;
 

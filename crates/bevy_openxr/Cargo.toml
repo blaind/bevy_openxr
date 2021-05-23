@@ -9,7 +9,7 @@ license = "MIT"
 readme = "README.md"
 
 [dependencies]
-bevy = { version = "0.5.0", default-features = false, features = ["render"] }
+bevy = { version = "0.5.0", default-features = false, features = ["render", "bevy_wgpu", "x11"] }
 openxr = { version = "0.13.1", features = ["loaded"], default-features = false }
 bevy_openxr_core = { path = "../bevy_openxr_core" }
 wgpu = { version = "0.8.0" }
@@ -21,4 +21,3 @@ num-derive = "0.2"
 ndk-glue = { version = "0.2", features = ["logger"]}
 ndk = { version = "0.2.1", features = ["trace"] }
 jni = "0.18.0"
-

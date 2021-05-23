@@ -1,13 +1,9 @@
-use bevy::ecs::bundle::Bundle;
 use bevy::ecs::reflect::ReflectComponent;
 use bevy::math::Mat4;
 use bevy::reflect::Reflect;
-use bevy::render::{
-    camera::{Camera, CameraProjection, DepthCalculation, VisibleEntities},
-    render_graph::base::camera::CAMERA_3D,
-};
-use bevy::transform::components::{GlobalTransform, Transform};
-use bevy_openxr_core::{View, XrFovf};
+use bevy::render::camera::{CameraProjection, DepthCalculation};
+
+use bevy_openxr_core::XrFovf;
 
 #[derive(Debug, Clone, Reflect)]
 #[reflect(Component)]
@@ -133,31 +129,6 @@ impl XRProjection {
 }
 
 // https://gitlab.freedesktop.org/monado/demos/openxr-simple-example/-/blob/master/main.c#L70
-
-#[derive(Bundle)]
-pub struct XRCameraBundle {
-    pub camera: Camera,
-    pub xr_projection: XRProjection,
-    pub visible_entities: VisibleEntities,
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
-}
-
-impl Default for XRCameraBundle {
-    fn default() -> Self {
-        XRCameraBundle {
-            camera: Camera {
-                name: Some(CAMERA_3D.to_string()),
-                ..Default::default()
-            },
-            // FIXME: ..Default::default() here causes stack overflow? Wut?
-            xr_projection: Default::default(),
-            visible_entities: Default::default(),
-            transform: Default::default(),
-            global_transform: Default::default(),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

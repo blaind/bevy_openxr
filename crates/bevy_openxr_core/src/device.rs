@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use bevy::transform::components::Transform;
-use openxr::Time;
 
 use crate::{
     event::{XREvent, XRViewSurfaceCreated, XRViewsCreated},

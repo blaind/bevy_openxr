@@ -1,4 +1,3 @@
-use bevy::app::{App, AppBuilder, Events, ManualEventReader};
 use bevy::asset::AssetPlugin;
 use bevy::core::CorePlugin;
 use bevy::ecs::{component::Component, prelude::*};
@@ -15,7 +14,11 @@ use bevy::transform::TransformPlugin;
 use bevy::ui::UiPlugin;
 use bevy::wgpu::WgpuPlugin;
 use bevy::window::WindowPlugin;
-use bevy_openxr::{get_render_plugin, OpenXRPlugin, XRCameraBundle};
+use bevy::{
+    app::{App, AppBuilder, Events, ManualEventReader},
+    render::RenderPlugin,
+};
+use bevy_openxr::prelude::*;
 use bevy_openxr_core::{
     event::{XRState, XRViewSurfaceCreated, XRViewsCreated},
     OpenXRCorePlugin,
@@ -32,7 +35,7 @@ fn test() {
     builder.add_plugin(WindowPlugin::default());
     builder.add_plugin(AssetPlugin::default());
     builder.add_plugin(ScenePlugin::default());
-    builder.add_plugin(get_render_plugin());
+    builder.add_plugin(RenderPlugin::default());
     builder.add_plugin(SpritePlugin::default());
     builder.add_plugin(UiPlugin::default());
     builder.add_plugin(TextPlugin::default());

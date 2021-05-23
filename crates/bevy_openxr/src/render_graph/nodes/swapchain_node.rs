@@ -1,15 +1,15 @@
-use std::{any::Any, borrow::Cow};
+use std::borrow::Cow;
 
-use bevy::ecs::world::World;
-use bevy_openxr_core::XRConfigurationState;
-
-use bevy::render::{
-    render_graph::{Node, ResourceSlotInfo, ResourceSlots},
-    renderer::{
-        RenderContext, RenderResourceContext, RenderResourceId, RenderResourceType, TextureId,
+use bevy::{
+    ecs::world::World,
+    render::{
+        render_graph::{Node, ResourceSlotInfo, ResourceSlots},
+        renderer::{RenderContext, RenderResourceId, RenderResourceType, TextureId},
     },
+    wgpu::renderer::WgpuRenderResourceContext,
 };
-use bevy::wgpu::renderer::{WgpuRenderContext, WgpuRenderResourceContext};
+
+use bevy_openxr_core::XRConfigurationState;
 
 /// Like `WindowSwapChainNode`, but for XR implementation
 /// XR implementation initializes the underlying textures at the startup, and after that
