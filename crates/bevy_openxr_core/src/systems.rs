@@ -1,6 +1,7 @@
 use bevy::app::{EventWriter, Events};
 use bevy::ecs::system::ResMut;
 
+use crate::XRConfigurationState;
 use crate::{
     event::{XRCameraTransformsUpdated, XREvent, XRState, XRViewSurfaceCreated, XRViewsCreated},
     hand_tracking::HandPoseState,
@@ -11,6 +12,7 @@ pub(crate) fn openxr_event_system(
     mut openxr: ResMut<XRDevice>,
     mut hand_pose: ResMut<HandPoseState>,
     mut state_events: ResMut<Events<XRState>>,
+    mut configuration_state: ResMut<XRConfigurationState>,
 
     mut view_surface_created_sender: EventWriter<XRViewSurfaceCreated>,
     mut views_created_sender: EventWriter<XRViewsCreated>,
@@ -20,7 +22,8 @@ pub(crate) fn openxr_event_system(
     for event in openxr.drain_events() {
         match event {
             XREvent::ViewSurfaceCreated(view_created) => {
-                view_surface_created_sender.send(view_created)
+                configuration_state.last_view_surface = Some(view_created.clone());
+                view_surface_created_sender.send(view_created);
             }
             XREvent::ViewsCreated(views) => views_created_sender.send(views),
         }

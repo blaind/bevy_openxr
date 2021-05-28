@@ -19,7 +19,7 @@ pub enum XRState {
 }
 
 /// XR View has been configured/created
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct XRViewSurfaceCreated {
     pub width: u32,
     pub height: u32,

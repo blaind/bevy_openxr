@@ -10,9 +10,10 @@ mod swapchain;
 mod systems;
 mod xr_instance;
 
+use bevy::render::renderer::TextureId;
 use bevy::utils::tracing::debug;
 pub use device::*;
-use event::XRState;
+use event::{XRState, XRViewSurfaceCreated};
 pub use swapchain::*;
 use systems::*;
 pub use xr_instance::{set_xr_instance, XrInstance};
@@ -224,7 +225,7 @@ impl From<openxr::sys::Result> for Error {
 
 #[derive(Default)]
 pub struct XRConfigurationState {
-    // option, because these will be taken away
-    pub texture_views: Option<Vec<wgpu::TextureView>>,
+    pub texture_view_ids: Option<Vec<TextureId>>,
     pub next_swap_chain_index: usize,
+    pub last_view_surface: Option<XRViewSurfaceCreated>,
 }

@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::renderer::TextureId};
 use bevy_openxr_core::{event::XRState, XRConfigurationState, XRDevice};
 
 pub(crate) fn pre_render_system(
@@ -16,7 +16,22 @@ pub(crate) fn pre_render_system(
     };
 
     if let Some(texture_views) = texture_views {
-        xr_configuration_state.texture_views = Some(texture_views);
+        wgpu_render_state.add_textures = texture_views
+            .into_iter()
+            .map(|texture_view| bevy::wgpu::TextureView {
+                id: TextureId::new(),
+                texture_view,
+            })
+            .collect();
+
+        // FIXME: move this to event (but can't use in bevy_wgpu since must be writable event)
+        xr_configuration_state.texture_view_ids = Some(
+            wgpu_render_state
+                .add_textures
+                .iter()
+                .map(|tv| tv.id)
+                .collect(),
+        );
     }
 
     if should_render {

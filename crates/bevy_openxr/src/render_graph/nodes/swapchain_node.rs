@@ -4,9 +4,8 @@ use bevy::{
     ecs::world::World,
     render::{
         render_graph::{Node, ResourceSlotInfo, ResourceSlots},
-        renderer::{RenderContext, RenderResourceId, RenderResourceType, TextureId},
+        renderer::{RenderContext, RenderResourceId, RenderResourceType},
     },
-    wgpu::renderer::WgpuRenderResourceContext,
 };
 
 use bevy_openxr_core::XRConfigurationState;
@@ -16,7 +15,7 @@ use bevy_openxr_core::XRConfigurationState;
 /// this node will swap the textures based on texture id retrieved from XR swapchain
 #[derive(Default)]
 pub struct XRSwapchainNode {
-    resource_ids: Option<Vec<(RenderResourceId, Option<wgpu::TextureView>)>>,
+    resource_ids: Option<Vec<RenderResourceId>>,
 }
 
 impl XRSwapchainNode {
@@ -36,59 +35,41 @@ impl Node for XRSwapchainNode {
         OUTPUT
     }
 
-    fn prepare(&mut self, world: &mut World) {
-        let mut xr_configuration_state = world.get_resource_mut::<XRConfigurationState>().unwrap();
-        if let None = self.resource_ids {
-            // move array of textures from the swapchain into render resource context
-            // and set textures to this node
-            self.resource_ids = Some(
-                xr_configuration_state
-                    .texture_views
-                    .take()
-                    .unwrap()
-                    .into_iter()
-                    .map(|texture_view| {
-                        (
-                            RenderResourceId::Texture(TextureId::new()),
-                            Some(texture_view),
-                        )
-                    })
-                    .collect(),
-            );
-        }
-    }
-
     fn update(
         &mut self,
         world: &World,
-        render_context: &mut dyn RenderContext,
+        _render_context: &mut dyn RenderContext,
         _input: &ResourceSlots,
         output: &mut ResourceSlots,
     ) {
         const WINDOW_TEXTURE: usize = 0;
         let xr_configuration_state = world.get_resource::<XRConfigurationState>().unwrap();
 
+        let render_state = world.get_resource::<XRConfigurationState>().unwrap();
+
+        let resource_ids = match &self.resource_ids {
+            Some(resource_ids) => resource_ids,
+            None => {
+                if let Some(texture_view_ids) = &render_state.texture_view_ids {
+                    self.resource_ids = Some(
+                        texture_view_ids
+                            .iter()
+                            .map(|id| RenderResourceId::Texture(*id))
+                            .collect(),
+                    );
+                    self.resource_ids.as_ref().unwrap()
+                } else {
+                    return;
+                }
+            }
+        };
+
         // get next texture by id
-        let render_resource_id = self
-            .resource_ids
-            .as_mut()
-            .unwrap()
-            .get_mut(xr_configuration_state.next_swap_chain_index)
+        let render_resource_id = resource_ids
+            .get(xr_configuration_state.next_swap_chain_index)
             .unwrap();
 
-        if let Some(texture_view) = render_resource_id.1.take() {
-            if let RenderResourceId::Texture(texture_id) = render_resource_id.0 {
-                let render_resource_context = render_context.resources_mut();
-
-                let render_resource_context = render_resource_context
-                    .downcast_mut::<WgpuRenderResourceContext>()
-                    .unwrap();
-
-                render_resource_context.add_wgpu_texture_view(texture_id, texture_view);
-            }
-        }
-
         // set output to desired resource id
-        output.set(WINDOW_TEXTURE, render_resource_id.0.clone());
+        output.set(WINDOW_TEXTURE, render_resource_id.clone());
     }
 }
