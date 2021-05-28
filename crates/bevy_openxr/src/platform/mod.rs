@@ -22,9 +22,7 @@ pub(crate) trait OpenXRInstance {
 impl OpenXRInstance for openxr::Entry {
     fn load_bevy_openxr() -> Result<openxr::Entry, Error> {
         // FIXME: use ::load by default, path from config?
-        Ok(openxr::Entry::load_from(std::path::Path::new(
-            "/usr/lib/x86_64-linux-gnu/libopenxr_loader.so.1",
-        ))?)
+        Ok(openxr::Entry::load()?)
     }
 
     fn instantiate(&mut self, extensions: &ExtensionSet) -> Result<Instance, Error> {
@@ -44,7 +42,13 @@ impl OpenXRInstance for openxr::Entry {
 }
 
 pub(crate) fn initialize_openxr() {
-    let mut entry = openxr::Entry::load_bevy_openxr().unwrap();
+    let mut entry = match openxr::Entry::load_bevy_openxr() {
+        Ok(entry) => entry,
+        Err(_) => {
+            println!("Could not load openxr loader. Make sure that you have openxr_loader.dll (Windows), libopenxr_loader.dylib (MacOS) or libopenxr_loader.so (Linux) in the library load path");
+            std::process::exit(255);
+        }
+    };
     let mut extensions = entry.enumerate_extensions().unwrap();
 
     // because of https://gitlab.freedesktop.org/monado/monado/-/issues/98
