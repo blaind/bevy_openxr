@@ -20,6 +20,8 @@ pub(crate) fn xr_runner(mut app: App) {
                 "[app.update()]: Previous {} frames took on average {:.2}ms per frame ({:.1} fps) ",
                 print_every, average, fps
             );
+
+            durations.clear();
         }
 
         frame += 1;
