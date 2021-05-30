@@ -1,6 +1,6 @@
 use bevy::math::{Quat, Vec3};
 use bevy::transform::components::Transform;
-use bevy::utils::tracing::warn;
+use bevy::utils::tracing::{debug, warn};
 use openxr::{Time, View};
 use std::{fmt::Debug, num::NonZeroU32, sync::Arc};
 use wgpu::OpenXRHandles;
@@ -163,7 +163,7 @@ impl XRSwapchain {
     pub fn prepare_update(&mut self, handles: &mut OpenXRHandles) -> XRState {
         // Check that previous frame was rendered
         if let Some(_) = self.next_frame_state {
-            warn!("Called prepare_update() even though it was called already");
+            debug!("Called prepare_update() even though it was called already");
             return XRState::Running; // <-- FIXME might change state, should keep it in memory somewhere
         }
 
@@ -227,10 +227,6 @@ impl XRSwapchain {
     }
 
     pub fn get_view_positions(&mut self, handles: &mut OpenXRHandles) -> Option<Vec<Transform>> {
-        if let None = self.next_frame_state {
-            self.prepare_update(handles);
-        }
-
         if let None = self.next_frame_state {
             return None;
         }

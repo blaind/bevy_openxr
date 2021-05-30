@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use bevy::transform::components::Transform;
+use openxr::ViewConfigurationType;
 
 use crate::{
     event::{XREvent, XRViewSurfaceCreated, XRViewsCreated},
@@ -21,6 +22,24 @@ pub struct XRDevice {
 
 impl XRDevice {
     pub fn new(xr_struct: OpenXRStruct) -> Self {
+        let system_properties = xr_struct
+            .instance
+            .system_properties(xr_struct.handles.system)
+            .unwrap();
+
+        let view_configuration_properties = xr_struct
+            .instance
+            .view_configuration_properties(
+                xr_struct.handles.system,
+                ViewConfigurationType::PRIMARY_STEREO,
+            )
+            .unwrap();
+
+        println!(
+            "SystemId: {:?}, view configuration: {:#?}",
+            system_properties.system_id, view_configuration_properties
+        );
+
         Self {
             inner: xr_struct,
             swapchain: None,
