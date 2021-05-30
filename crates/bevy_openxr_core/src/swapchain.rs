@@ -32,6 +32,8 @@ pub struct XRSwapchain {
 
     /// TODO: move this away, doesn't belong here
     hand_trackers: Option<HandTrackers>,
+
+    waited: bool,
 }
 
 const VIEW_COUNT: u32 = 2; // FIXME get from settings
@@ -150,10 +152,7 @@ impl XRSwapchain {
                         sample_count: 1,
                         dimension: wgpu::TextureDimension::D2,
                         format,
-                        usage: wgpu::TextureUsage::RENDER_ATTACHMENT
-                            | wgpu::TextureUsage::STORAGE
-                            | wgpu::TextureUsage::COPY_SRC
-                            | wgpu::TextureUsage::COPY_DST,
+                        usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
                         label: None,
                     },
                     color_image,
@@ -192,6 +191,7 @@ impl XRSwapchain {
             environment_blend_mode,
             next_frame_state: None,
             hand_trackers,
+            waited: false,
         }
     }
 
@@ -203,6 +203,7 @@ impl XRSwapchain {
         self.sc_handle
             .wait_image(openxr::Duration::INFINITE)
             .unwrap();
+        self.waited = true;
         image_index as usize
     }
 
@@ -318,8 +319,13 @@ impl XRSwapchain {
             }
         };
 
+        if !self.waited {
+            return;
+        }
+
         // "Release the oldest acquired image"
         self.sc_handle.release_image().unwrap();
+        self.waited = false;
 
         // FIXME views acquisition should probably occur somewhere else - timing problem?
         // FIXME is there a problem now, if the rendering uses different camera positions than what's used at openxr?

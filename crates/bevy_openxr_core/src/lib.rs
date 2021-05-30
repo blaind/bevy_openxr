@@ -130,6 +130,7 @@ impl OpenXRStruct {
                         // XR Docs: The application should exit its frame loop and call xrEndSession.
                         openxr::SessionState::STOPPING => {
                             self.handles.session.end().unwrap();
+                            // TODO500: FIXME add a graceful cleanup of all OpenXR resources here
                             self.change_state(XRState::Paused, &mut state_changed);
                             std::process::exit(0); // FIXME should remove this
                         }
