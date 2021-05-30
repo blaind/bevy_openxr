@@ -42,6 +42,7 @@ impl Node for XRWindowTextureNode {
     ) {
         const WINDOW_TEXTURE: usize = 0;
 
+        // TODO performance use Change detection? (takes ~10 microseconds now, not too bad)
         let render_state = world.get_resource::<XRConfigurationState>().unwrap(); // can't be an event, as this doesn't run when event is sent
 
         if render_state.last_view_surface != self.last_view_surface {
@@ -60,6 +61,8 @@ impl Node for XRWindowTextureNode {
 
                 let texture_resource = render_resource_context.create_texture(self.descriptor);
                 output.set(WINDOW_TEXTURE, RenderResourceId::Texture(texture_resource));
+
+                self.last_view_surface = Some(last_view_surface.clone());
             }
         }
     }
