@@ -57,7 +57,28 @@ impl XRSwapchain {
             depth_or_array_layers: 1,
         };
 
+        let swapchain_formats = openxr_struct
+            .handles
+            .session
+            .enumerate_swapchain_formats()
+            .unwrap();
+
+        let vk_swapchain_formats = swapchain_formats
+            .iter()
+            .map(|f| ash::vk::Format::from_raw(*f as i32))
+            .collect::<Vec<_>>();
+
+        println!(
+            "OpenXR supported swapchain formats: {:#?}",
+            vk_swapchain_formats
+        );
+
         let format = wgpu::TextureFormat::Rgba8Unorm;
+
+        println!(
+            "Selected (currently hardcoded) swapchain format: {:?}",
+            COLOR_FORMAT
+        );
 
         let handle = openxr_struct
             .handles
