@@ -1,4 +1,4 @@
-use bevy::app::{EventWriter, Events};
+use bevy::app::{AppExit, EventWriter, Events};
 use bevy::ecs::system::ResMut;
 
 use crate::XRConfigurationState;
@@ -17,6 +17,8 @@ pub(crate) fn openxr_event_system(
     mut view_surface_created_sender: EventWriter<XRViewSurfaceCreated>,
     mut views_created_sender: EventWriter<XRViewsCreated>,
     mut camera_transforms_updated: EventWriter<XRCameraTransformsUpdated>,
+
+    mut app_exit_events: EventWriter<AppExit>,
 ) {
     // TODO add this drain -system as pre-render and post-render system?
     for event in openxr.drain_events() {
@@ -33,8 +35,11 @@ pub(crate) fn openxr_event_system(
     match openxr.inner.handle_openxr_events() {
         None => (),
         Some(changed_state) => {
-            // FIXME handle XRState::Exiting
             state_events.send(changed_state);
+
+            if let XRState::Exiting = changed_state {
+                app_exit_events.send(AppExit);
+            }
         }
     }
 

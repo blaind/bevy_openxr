@@ -4,6 +4,7 @@ use bevy::ecs::system::IntoSystem;
 mod device;
 pub mod event;
 pub mod hand_tracking;
+
 pub mod math;
 mod runner;
 mod swapchain;
@@ -26,7 +27,7 @@ impl Plugin for OpenXRCorePlugin {
         debug!("Building OpenXRCorePlugin");
         let xr_instance = xr_instance::take_xr_instance();
         let options = XrOptions::default(); // FIXME user configurable?
-        let xr_device = xr_instance.into_device_with_options(options);
+        let (xr_device, wgpu_openxr) = xr_instance.into_device_with_options(options);
 
         app.insert_resource(xr_device)
             .add_event::<event::XRState>()
@@ -35,6 +36,7 @@ impl Plugin for OpenXRCorePlugin {
             .add_event::<event::XRCameraTransformsUpdated>()
             .init_resource::<XRConfigurationState>()
             .init_resource::<hand_tracking::HandPoseState>()
+            .insert_resource(wgpu_openxr)
             .add_system_to_stage(CoreStage::PreUpdate, openxr_event_system.system())
             .add_system(xr_event_debug.system())
             .set_runner(runner::xr_runner); // FIXME conditional, or extract xr_events to whole new system? probably good
@@ -132,7 +134,6 @@ impl OpenXRStruct {
                             self.handles.session.end().unwrap();
                             // TODO500: FIXME add a graceful cleanup of all OpenXR resources here
                             self.change_state(XRState::Paused, &mut state_changed);
-                            std::process::exit(0); // FIXME should remove this
                         }
                         // XR Docs:
                         // EXITING: The application should end its XR experience and not automatically restart it.
@@ -154,6 +155,9 @@ impl OpenXRStruct {
                             // FIXME is this handling ok?
                             self.change_state(XRState::Paused, &mut state_changed);
                         }
+                        openxr::SessionState::SYNCHRONIZED => {
+                            self.change_state(XRState::Running, &mut state_changed);
+                        }
                         _ => {}
                     }
                 }
@@ -164,8 +168,11 @@ impl OpenXRStruct {
                 openxr::Event::EventsLost(e) => {
                     println!("lost {} events", e.lost_event_count());
                 }
-                openxr::Event::ReferenceSpaceChangePending(_) => {
-                    println!("OpenXR: Event: ReferenceSpaceChangePending");
+                openxr::Event::ReferenceSpaceChangePending(reference_space) => {
+                    println!(
+                        "OpenXR: Event: ReferenceSpaceChangePending {:?}",
+                        reference_space.reference_space_type()
+                    );
                 }
                 openxr::Event::PerfSettingsEXT(_) => {
                     println!("OpenXR: Event: PerfSettingsEXT");

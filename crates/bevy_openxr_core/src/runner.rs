@@ -1,12 +1,30 @@
 use bevy::app::App;
+use bevy::app::AppExit;
+use bevy::ecs::event::Events;
+use bevy::ecs::event::ManualEventReader;
 use bevy::utils::Instant;
+use wgpu::wgpu_openxr::WGPUOpenXR;
 
 pub(crate) fn xr_runner(mut app: App) {
     let mut frame = 0;
 
     let print_every = 20;
     let mut durations = Vec::with_capacity(print_every);
+    let mut app_exit_event_reader = ManualEventReader::<AppExit>::default();
+
     loop {
+
+        if let Some(app_exit_events) = app.world.get_resource_mut::<Events<AppExit>>() {
+            if app_exit_event_reader
+                .iter(&app_exit_events)
+                .next_back()
+                .is_some()
+            {
+                println!("Exit triggered...");
+                break;
+            }
+        }
+
         let start = Instant::now();
         app.update();
         durations.push(start.elapsed());
@@ -26,4 +44,7 @@ pub(crate) fn xr_runner(mut app: App) {
 
         frame += 1;
     }
+
+    let wgpu_openxr = app.world.get_resource::<WGPUOpenXR>().unwrap();
+    wgpu_openxr.destroy();
 }

@@ -20,11 +20,15 @@ impl XrInstance {
         }
     }
 
-    pub(crate) fn into_device_with_options(self, options: XrOptions) -> XRDevice {
+    pub(crate) fn into_device_with_options(self, options: XrOptions) -> (XRDevice, WGPUOpenXR) {
         let handles = self.wgpu_openxr.get_session_handles().unwrap();
         let xr_struct = OpenXRStruct::new(self.inner, handles, options);
 
-        XRDevice::new(xr_struct)
+        (XRDevice::new(xr_struct), self.wgpu_openxr)
+    }
+
+    pub fn destroy(&self) {
+        self.wgpu_openxr.destroy().unwrap();
     }
 }
 
