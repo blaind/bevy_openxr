@@ -5,20 +5,14 @@ use bevy::prelude::*;
 use bevy::window::WindowId;
 
 pub(crate) struct InputMetadata {
-    window_width: f32,
-    window_height: f32,
+    window_size: Option<Vec2>,
     previous_mouse_position: Option<Vec2>,
     previous_mouse_states: [bool; 5],
 }
 
 pub(crate) fn setup_android_keyboard_event(mut commands: Commands) {
-    // FIXME: can these change over lifetime?
-    let window_width = ndk_glue::native_window().as_ref().unwrap().width() as f32;
-    let window_height = ndk_glue::native_window().as_ref().unwrap().height() as f32;
-
     commands.insert_resource(InputMetadata {
-        window_width,
-        window_height,
+        window_size: None,
         previous_mouse_position: None,
         previous_mouse_states: [false, false, false, false, false],
     })
@@ -32,6 +26,18 @@ pub(crate) fn android_keyboard_event(
     mut mouse_motion_events: EventWriter<MouseMotion>,
     mut keyboard_metadata: ResMut<InputMetadata>,
 ) {
+    if let None = keyboard_metadata.window_size {
+        if let Some(native_window) = ndk_glue::native_window().as_ref() {
+            // FIXME: can these change over lifetime?
+            keyboard_metadata.window_size = Some(Vec2::new(
+                ndk_glue::native_window().as_ref().unwrap().width() as f32,
+                ndk_glue::native_window().as_ref().unwrap().height() as f32,
+            ));
+        } else {
+            return;
+        }
+    }
+
     let has_events = match ndk_glue::input_queue().as_ref() {
         Some(iq) => iq.has_events().unwrap(),
         None => return,
@@ -69,10 +75,12 @@ pub(crate) fn android_keyboard_event(
                     keyboard_input_events.send(keyboard_input);
                     let handled = true;
                 } else {
+                    /* do not print by default
                     println!(
                         "!! Unknown android key event scan_code={:?}, key_code={:?}, action={:?}",
                         scan_code, key_code, action
                     );
+                    */
                 }
 
                 /*
@@ -97,7 +105,7 @@ pub(crate) fn android_keyboard_event(
                         if let Some(pointer) = motion_event.pointers().next() {
                             let position = Vec2::new(
                                 pointer.x(),
-                                keyboard_metadata.window_height - pointer.y() - 1., // FIXME okay? 0 -- height - 1
+                                keyboard_metadata.window_size.unwrap().y - pointer.y() - 1., // FIXME okay? 0 -- height - 1
                             );
 
                             cursor_moved_events.send(CursorMoved {
