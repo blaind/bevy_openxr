@@ -11,7 +11,7 @@ pub(crate) use xr_render_graph::*;
 pub struct OpenXRWgpuPlugin;
 
 impl Plugin for OpenXRWgpuPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_startup_system(add_xr_render_graph.system())
             .add_system_to_stage(
                 RenderStage::Draw,

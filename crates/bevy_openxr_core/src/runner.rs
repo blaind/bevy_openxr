@@ -8,7 +8,7 @@ use wgpu::wgpu_openxr::WGPUOpenXR;
 pub(crate) fn xr_runner(mut app: App) {
     let mut frame = 0;
 
-    let print_every = 20;
+    let print_every = 1000;
     let mut durations = Vec::with_capacity(print_every);
     let mut app_exit_event_reader = ManualEventReader::<AppExit>::default();
 

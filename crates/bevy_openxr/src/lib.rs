@@ -1,9 +1,10 @@
-use bevy::app::{AppBuilder, Plugin, ScheduleRunnerPlugin, ScheduleRunnerSettings};
+use bevy::app::{App, Plugin, ScheduleRunnerPlugin, ScheduleRunnerSettings};
 use bevy::ecs::prelude::*;
 
 pub mod prelude {
     pub use crate::{
-        render_graph::camera::camera::XRCameraBundle, HandPoseEvent, OpenXRPlugin, OpenXRSettings,
+        render_graph::camera::{camera::XRCameraBundle, projection::XRProjection},
+        HandPoseEvent, OpenXRPlugin, OpenXRSettings,
     };
 
     pub use openxr::HandJointLocations;
@@ -36,9 +37,9 @@ impl Default for OpenXRSettings {
 }
 
 impl Plugin for OpenXRPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         {
-            let settings = app.world_mut().insert_resource(OpenXRSettings::default());
+            let settings = app.world.insert_resource(OpenXRSettings::default());
 
             println!("Settings: {:?}", settings);
         };
@@ -47,7 +48,7 @@ impl Plugin for OpenXRPlugin {
         platform::initialize_openxr();
 
         let mut wgpu_options = app
-            .world_mut()
+            .world
             .get_resource::<WgpuOptions>()
             .cloned()
             .unwrap_or_else(WgpuOptions::default);

@@ -5,6 +5,9 @@ mod device;
 pub mod event;
 pub mod hand_tracking;
 
+#[cfg(target_os = "android")]
+mod keyboard;
+
 pub mod math;
 mod runner;
 mod swapchain;
@@ -23,7 +26,7 @@ pub use xr_instance::{set_xr_instance, XrInstance};
 pub struct OpenXRCorePlugin;
 
 impl Plugin for OpenXRCorePlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         debug!("Building OpenXRCorePlugin");
         let xr_instance = xr_instance::take_xr_instance();
         let options = XrOptions::default(); // FIXME user configurable?
@@ -40,6 +43,13 @@ impl Plugin for OpenXRCorePlugin {
             .add_system_to_stage(CoreStage::PreUpdate, openxr_event_system.system())
             .add_system(xr_event_debug.system())
             .set_runner(runner::xr_runner); // FIXME conditional, or extract xr_events to whole new system? probably good
+
+        #[cfg(target_os = "android")]
+        app.add_startup_system(keyboard::setup_android_keyboard_event.system())
+            .add_system_to_stage(
+                CoreStage::PreUpdate,
+                keyboard::android_keyboard_event.system(),
+            );
     }
 }
 

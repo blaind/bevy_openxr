@@ -3,6 +3,7 @@ use bevy::asset::Assets;
 use bevy::ecs::prelude::*;
 use bevy::math::{Quat, Vec3};
 use bevy::pbr::{prelude::*, PbrBundle};
+use bevy::prelude::Handle;
 use bevy::render::prelude::*;
 use bevy::transform::prelude::*;
 use bevy_openxr_core::{event::XRState, hand_tracking::HandPoseState};
@@ -14,7 +15,7 @@ use num_traits::FromPrimitive;
 pub struct OpenXRHandTrackingPlugin;
 
 impl Plugin for OpenXRHandTrackingPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.init_resource::<HandTrackingState>()
             .add_startup_system(setup.system())
             .add_system(hand_visibility_system.system())
@@ -34,50 +35,99 @@ fn setup(
     // "Conventions of hand joints"
 
     // FIXME add parent objects
+    let material_1 = materials.add(StandardMaterial {
+        base_color: Color::rgb(0., 0.7, 0.),
+        //unlit: true,
+        ..Default::default()
+    });
+
+    let material_2 = materials.add(StandardMaterial {
+        base_color: Color::rgb(0., 0.7, 1.),
+        //unlit: true,
+        ..Default::default()
+    });
+
+    let material_3 = materials.add(StandardMaterial {
+        base_color: Color::rgb(1., 0.7, 0.),
+        //unlit: true,
+        ..Default::default()
+    });
 
     // left hand
     for i in 0..openxr::HAND_JOINT_COUNT {
         commands
-            .spawn_bundle(get_joint_box(i, &mut meshes, &mut materials))
+            .spawn_bundle(get_joint_box(
+                i,
+                &mut meshes,
+                &material_1,
+                &material_2,
+                &material_3,
+            ))
             .insert(LeftHand(i));
     }
 
     // right hand
     for i in 0..openxr::HAND_JOINT_COUNT {
         commands
-            .spawn_bundle(get_joint_box(i, &mut meshes, &mut materials))
+            .spawn_bundle(get_joint_box(
+                i,
+                &mut meshes,
+                &material_1,
+                &material_2,
+                &material_3,
+            ))
             .insert(RightHand(i));
     }
 }
 
 fn get_joint_box(
-    joint: usize,
+    hand_joint: usize,
     meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<StandardMaterial>,
+    material_1: &Handle<StandardMaterial>,
+    material_2: &Handle<StandardMaterial>,
+    material_3: &Handle<StandardMaterial>,
 ) -> PbrBundle {
-    let size = match FromPrimitive::from_usize(joint).unwrap() {
+    let default_size = 0.012;
+
+    let hand_joint = FromPrimitive::from_usize(hand_joint).unwrap();
+
+    let size = match hand_joint {
         HandJoint::ThumbTip
         | HandJoint::IndexTip
         | HandJoint::MiddleTip
         | HandJoint::RingTip
-        | HandJoint::LittleTip => 0.018 / 4.0,
-        _ => 0.018,
+        | HandJoint::LittleTip => default_size / 3.0,
+        _ => default_size,
     };
 
     // FIXME could have only two instances of mesh?
     PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size })),
-        material: materials.add(Color::rgb(0., 0.7, 0.).into()),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
+        mesh: meshes.add(match hand_joint {
+            HandJoint::IndexTip => Mesh::from(shape::Icosphere {
+                radius: 0.005,
+                ..Default::default()
+            }),
+            _ => Mesh::from(shape::Cube { size }),
+        }),
+        material: match hand_joint {
+            HandJoint::IndexTip => material_3,
+            HandJoint::ThumbTip
+            | HandJoint::MiddleTip
+            | HandJoint::RingTip
+            | HandJoint::LittleTip => material_2,
+            _ => material_1,
+        }
+        .clone(),
         ..Default::default()
     }
 }
 
 #[derive(Default)]
-struct HandTrackingState {
-    visible: bool, // both, from upstream
-    left_visible: bool,
-    right_visible: bool,
+pub struct HandTrackingState {
+    pub tracked: bool,
+    pub visible: bool, // both, from upstream
+    pub left_visible: bool,
+    pub right_visible: bool,
 }
 
 fn hand_visibility_system(
@@ -184,7 +234,7 @@ fn hand_system(
 // https://www.khronos.org/registry/OpenXR/specs/1.0/html/xrspec.html
 // typedef enum XrHandJointEXT
 #[derive(FromPrimitive)]
-enum HandJoint {
+pub enum HandJoint {
     Palm = 0,
     Wrist = 1,
     ThumbMetacarpal = 2,

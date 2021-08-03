@@ -5,16 +5,20 @@ use bevy::render::camera::{CameraProjection, DepthCalculation};
 
 use bevy_openxr_core::XrFovf;
 
-#[derive(Debug, Clone, Reflect)]
-#[reflect(Component)]
+#[derive(Debug, Clone)]
 pub struct XRProjection {
     pub near: f32,
     pub far: f32,
+    pub fov: Option<f32>,
 }
 
 impl XRProjection {
     pub fn new(near: f32, far: f32) -> Self {
-        XRProjection { near, far }
+        XRProjection {
+            near,
+            far,
+            fov: None,
+        }
     }
 }
 
@@ -28,6 +32,18 @@ impl CameraProjection for XRProjection {
     fn depth_calculation(&self) -> DepthCalculation {
         DepthCalculation::Distance
     }
+
+    fn get_fov(&self) -> f32 {
+        self.fov.unwrap_or(0.0)
+    }
+
+    fn get_near(&self) -> f32 {
+        self.near
+    }
+
+    fn get_far(&self) -> f32 {
+        self.far
+    }
 }
 
 impl Default for XRProjection {
@@ -35,6 +51,7 @@ impl Default for XRProjection {
         XRProjection {
             near: 0.05,
             far: 1000.,
+            fov: None,
         }
     }
 }
@@ -47,7 +64,9 @@ impl XRProjection {
     // Copyright (c) 2016 Oculus VR, LLC.
     // SPDX-License-Identifier: Apache-2.0
     // =============================================================================
-    pub fn get_projection_matrix_fov(&self, fov: &XrFovf) -> Mat4 {
+    pub fn get_projection_matrix_fov(&mut self, fov: &XrFovf) -> Mat4 {
+        self.fov = Some(fov.angle_right.abs() + fov.angle_left.abs()); // TODO ok?
+
         let is_vulkan_api = false; // FIXME wgpu probably abstracts this
         let near_z = self.near;
         let far_z = self.far;
