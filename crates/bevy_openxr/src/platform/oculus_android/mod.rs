@@ -45,16 +45,10 @@ impl OpenXRInstance for openxr::Entry {
         }
     }
 
-    fn instantiate(&mut self, extensions: &ExtensionSet) -> Result<Instance, Error> {
+    fn instantiate(&mut self, extensions: &mut ExtensionSet) -> Result<Instance, Error> {
         let (application_vm, application_context) = get_android_vm_and_jni_context()?;
 
-        let android_info = openxr::sys::InstanceCreateInfoAndroidKHR {
-            ty: openxr::sys::StructureType::INSTANCE_CREATE_INFO_ANDROID_KHR,
-            next: ptr::null(),
-            application_vm,
-            application_activity: application_context,
-        };
-
+        extensions.fb_display_refresh_rate = true;
         /*
         let other_extensions = extensions.other
             .iter()
@@ -76,7 +70,6 @@ impl OpenXRInstance for openxr::Entry {
             },
             &extensions,
             Some(other_extensions),
-            Some(&android_info as *const _ as *const std::os::raw::c_void),
             &[],
         )?;
 

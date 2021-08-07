@@ -12,7 +12,7 @@ pub(crate) trait OpenXRInstance {
         panic!("OpenXRInstance::load_bevy_openxr unimplemented for this platform");
     }
 
-    fn instantiate(&mut self, _extensions: &ExtensionSet) -> Result<Instance, Error> {
+    fn instantiate(&mut self, _extensions: &mut ExtensionSet) -> Result<Instance, Error> {
         panic!("OpenXRInstance::instantiate unimplemented for this platform");
     }
 }
@@ -25,7 +25,7 @@ impl OpenXRInstance for openxr::Entry {
         Ok(openxr::Entry::load()?)
     }
 
-    fn instantiate(&mut self, extensions: &ExtensionSet) -> Result<Instance, Error> {
+    fn instantiate(&mut self, extensions: &mut ExtensionSet) -> Result<Instance, Error> {
         let app_info = &openxr::ApplicationInfo {
             application_name: "hello openxr",
             engine_name: "bevy",
@@ -34,7 +34,7 @@ impl OpenXRInstance for openxr::Entry {
         };
 
         let xr_instance = self
-            .create_instance(app_info, &extensions, None, None, &[])
+            .create_instance(app_info, &extensions, None, &[])
             .unwrap();
 
         Ok(xr_instance)
@@ -54,7 +54,7 @@ pub(crate) fn initialize_openxr() {
     // because of https://gitlab.freedesktop.org/monado/monado/-/issues/98
     extensions.mnd_headless = false;
 
-    let instance = entry.instantiate(&extensions).unwrap();
+    let instance = entry.instantiate(&mut extensions).unwrap();
     let wgpu_openxr = wgpu::wgpu_openxr::new(
         wgpu::BackendBit::VULKAN,
         &instance,

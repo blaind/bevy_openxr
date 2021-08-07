@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 bevy = { version = "0.5.0", default-features = false }
-openxr = { version = "0.13.1", features = ["loaded"], default-features = false }
+openxr = { version = "0.15", features = ["loaded"], default-features = false }
 wgpu = { version = "0.8.0", features = ["use-openxr"] }
 gfx-hal = { version = "0.8.0" }
 

@@ -10,7 +10,7 @@ readme = "README.md"
 
 [dependencies]
 bevy = { version = "0.5.0", default-features = false, features = ["render", "bevy_wgpu", "x11"] }
-openxr = { version = "0.13.1", features = ["loaded"], default-features = false }
+openxr = { version = "0.15", features = ["loaded"], default-features = false }
 bevy_openxr_core = { path = "../bevy_openxr_core" }
 wgpu = { version = "0.8.0" }
 

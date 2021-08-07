@@ -136,6 +136,36 @@ impl OpenXRStruct {
                     match e.state() {
                         // XR Docs: The application is ready to call xrBeginSession and sync its frame loop with the runtime.
                         openxr::SessionState::READY => {
+                            // if on oculus, set refresh rate
+                            if let Some(display_refresh_rate_fb) =
+                                self.instance.exts().fb_display_refresh_rate
+                            {
+                                let mut rate: f32 = 0.0;
+
+                                unsafe {
+                                    (display_refresh_rate_fb.get_display_refresh_rate)(
+                                        self.handles.session.as_raw(),
+                                        &mut rate,
+                                    )
+                                };
+
+                                println!("Current refresh rate: {:?}", rate);
+
+                                let request_refresh_rate = 90.;
+
+                                let ret = unsafe {
+                                    (display_refresh_rate_fb.request_display_refresh_rate)(
+                                        self.handles.session.as_raw(),
+                                        request_refresh_rate,
+                                    )
+                                };
+
+                                println!(
+                                    "Requested refresh rate change to {} - result: {:?}",
+                                    request_refresh_rate, ret
+                                );
+                            }
+
                             self.handles.session.begin(self.options.view_type).unwrap();
                             self.change_state(XRState::Running, &mut state_changed);
                         }
